@@ -114,18 +114,6 @@ public class ConsumerWebSrv {
 			}
 		}, windowSeconds * 1000);
 		
-	//	timer.scheduleAtFixedRate(new TimerTask() {
-	//		@Override
-	//		public void run() {
-	//			// Detect Botnet IP Addresses
-	//			try {
-	//				detectBotIps();
-	//			} catch (IOException e) {
-	//				e.printStackTrace();
-	//			}
-	//		}
-	//	}, windowSeconds * 1000, windowSeconds * 1000);
-		
 	}
 	
 
