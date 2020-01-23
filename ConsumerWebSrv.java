@@ -135,7 +135,6 @@ public class ConsumerWebSrv {
             	ipCount.entrySet().stream()
             	.filter(entry -> entry.getValue() > threshold_60s)
             	.map(Map.Entry::getKey)
-    //        	.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
             	.forEach(writer::println);
             	
             } catch (IOException e) {
