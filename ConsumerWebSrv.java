@@ -1,6 +1,10 @@
 package webserver.loganalyzer.kafka;
 
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
@@ -9,6 +13,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import java.time.*;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.io.IOException;
 import java.util.*;
 import java.util.HashMap;
@@ -30,7 +35,37 @@ public class ConsumerWebSrv {
 	private Instant windowStart;
 	private final int windowSeconds = 60;
 
-
+	public void createTopic() {
+		// Setup the Topic
+		Properties props = new Properties();
+		props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+		
+		final short replicationFactor = 1;
+		final short partitions = 1;
+				
+		// Create admin client
+		try (final AdminClient adminClient = AdminClient.create(props)) {
+			try {
+				// Define topic
+				final NewTopic newTopic = new NewTopic(apacheLogTopic, partitions, replicationFactor);
+				
+				// Create topic
+				CreateTopicsResult result = adminClient.createTopics(Collections.singleton(newTopic));
+				
+				// Wait for topic to get created (needs to be done as the call to create a topic is async)
+				result.values().get(apacheLogTopic).get();
+				
+			} catch (ExecutionException e) {
+				if (!(e.getCause() instanceof TopicExistsException)) {
+					throw new RuntimeException(e.getMessage(), e);
+				}
+				// If TopicExistsException, continue running, topic already exists
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public void ConsumerLogMessages() {
 		
 		// Setup the Consumer
@@ -237,6 +272,7 @@ public class ConsumerWebSrv {
 	public static void main(String[] args) throws Exception{  
 		
 		ConsumerWebSrv consumerMessages = new ConsumerWebSrv();
+		consumerMessages.createTopic();
 		consumerMessages.ConsumerLogMessages();
 		
 	}
